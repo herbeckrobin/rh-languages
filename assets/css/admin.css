@@ -1,0 +1,92 @@
+/**
+ * Sprachen-Tab: Registry-Tabelle + Funktions-Schalter im Blueprint-Stil.
+ */
+.rhlang-h {
+	margin: 1.6rem 0 0.3rem;
+	font-size: 15px;
+}
+
+.rhlang-h:first-of-type {
+	margin-top: 0;
+}
+
+.rhlang-intro {
+	max-width: 62ch;
+	color: var(--rhbp-text-muted, #50575e);
+	margin: 0 0 1rem;
+}
+
+.rhlang-note {
+	max-width: 62ch;
+	margin: 0 0 1rem;
+	padding: 8px 12px;
+	border-radius: 6px;
+	background: var(--rhbp-subtle, #f0f3ff);
+	font-size: 13px;
+}
+
+.rhlang-table {
+	border-collapse: collapse;
+	width: 100%;
+	max-width: 640px;
+	margin-bottom: 1rem;
+}
+
+.rhlang-table th,
+.rhlang-table td {
+	text-align: left;
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--rhbp-border, #e0e0e0);
+	vertical-align: middle;
+}
+
+.rhlang-table th {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--rhbp-text-muted, #757575);
+}
+
+.rhlang-cell-default {
+	text-align: center;
+	width: 80px;
+}
+
+.rhlang-select {
+	width: 100%;
+	max-width: 320px;
+}
+
+.rhlang-prefix {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	color: var(--rhbp-text-muted, #757575);
+	white-space: nowrap;
+}
+
+/* Funktions-Schalter */
+.rhlang-features {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: 640px;
+	margin-bottom: 1.2rem;
+}
+
+.rhlang-feature {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 12px 14px;
+}
+
+.rhlang-feature__text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.rhlang-feature__text span {
+	font-size: 12px;
+	color: var(--rhbp-text-muted, #757575);
+}

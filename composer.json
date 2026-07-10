@@ -1,0 +1,34 @@
+{
+    "name": "rh/languages",
+    "description": "Schlanke Mehrsprachigkeit für WordPress (FSE). Teil der rh-blueprint Kollektion.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Robin Herbeck",
+            "homepage": "https://robinherbeck.de"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "rh/blueprint-core": "^2.0",
+        "yahnis-elsts/plugin-update-checker": "^5.5"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/herbeckrobin/rh-blueprint-core"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "RhLanguages\\": "inc/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.1.0"
+        }
+    }
+}

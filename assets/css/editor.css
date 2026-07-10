@@ -1,0 +1,88 @@
+/**
+ * Sprach-Sidebar im Editor + Badge im angepinnten Icon.
+ */
+.rhlang-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.6em;
+	height: 1.6em;
+	padding: 0 0.35em;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	border-radius: 3px;
+	border: 1px solid currentColor;
+	letter-spacing: 0.02em;
+}
+
+.rhlang-panel {
+	padding: 16px;
+}
+
+.rhlang-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.rhlang-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 12px;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+}
+
+.rhlang-row.is-current {
+	border-color: #3858e9;
+	background: #f0f3ff;
+}
+
+.rhlang-row__lang {
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.rhlang-row__status {
+	font-size: 11px;
+	font-weight: 400;
+	color: #757575;
+	border: 1px solid #dcdcdc;
+	border-radius: 3px;
+	padding: 1px 5px;
+}
+
+.rhlang-row__badge {
+	font-size: 12px;
+	color: #3858e9;
+	font-weight: 600;
+}
+
+.rhlang-row__link {
+	font-size: 13px;
+	text-decoration: none;
+}
+
+.rhlang-row__hint {
+	font-size: 12px;
+	color: #757575;
+	max-width: 55%;
+	text-align: right;
+}
+
+.rhlang-error {
+	margin-bottom: 12px;
+	padding: 8px 12px;
+	border-radius: 4px;
+	background: #fcf0f1;
+	color: #a02222;
+	font-size: 13px;
+}
