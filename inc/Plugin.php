@@ -25,6 +25,7 @@ final class Plugin
 {
     private const OPT_FLUSH = 'rhlang_flush';
     private const OPT_SETUP = 'rhlang_needs_setup';
+    private const OPT_VERSION = 'rhlang_version';
 
     public static function boot(): void
     {
@@ -67,6 +68,13 @@ final class Plugin
         // Verzögertes Setup (Migration + Rewrite-Flush) verarbeiten.
         add_action('admin_init', [self::class, 'maybeSetup']);
         add_action('init', [self::class, 'maybeFlush'], 99);
+
+        // Nach einem Plugin-Update Rewrite-Regeln neu bauen, falls sich deren
+        // Inhalt geändert hat (der Regel-Key bleibt gleich, die DB-Kopie nicht).
+        if (get_option(self::OPT_VERSION) !== RHLANG_VERSION) {
+            update_option(self::OPT_FLUSH, 1);
+            update_option(self::OPT_VERSION, RHLANG_VERSION);
+        }
 
         // Wechselt die WordPress-Sprache (Einstellungen → Allgemein), ändert sich
         // die Standardsprache und damit die Prefix-Zuordnung. Rewrite-Regeln beim

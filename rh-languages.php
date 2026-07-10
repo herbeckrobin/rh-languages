@@ -5,7 +5,7 @@
  * Plugin URI:        https://github.com/herbeckrobin/rh-languages
  * Update URI:        https://github.com/herbeckrobin/rh-languages
  * Description:       Schlanke Mehrsprachigkeit für WordPress (FSE): eine Übersetzung ist ein echter Post, Prefix-URLs, Sprach-Switcher, hreflang, Theme-Strings per gettext. Kein externer Dienst. Teil der rh-blueprint Kollektion.
- * Version:           0.1.0
+ * Version:           0.1.1
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            Robin Herbeck
@@ -22,7 +22,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('RHLANG_VERSION', '0.1.0');
+define('RHLANG_VERSION', '0.1.1');
 define('RHLANG_PLUGIN_FILE', __FILE__);
 define('RHLANG_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('RHLANG_PLUGIN_URL', plugin_dir_url(__FILE__));

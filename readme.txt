@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.1.1 =
+* Fix: language home (/xx/) showed the blog index instead of the (translated) static front page, because the rewrite target carried an extra query var that blocks WordPress' static-front-page swap. The language now comes from the URL path only. Rewrite rules are rebuilt automatically after the update.
 
 = 0.1.0 =
 * Initial release: taxonomy data model, prefix routing, language query separation, switcher block, hreflang + html lang, per-language front page and navigation, gettext locale switch, editor sidebar with create-as-draft, post list column and filter.

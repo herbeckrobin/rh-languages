@@ -34,6 +34,7 @@ final class Routing
         add_action('parse_request', [$this, 'detectLanguage']);
         add_action('template_redirect', [$this, 'guardDefaultPrefix'], 1);
         add_action('template_redirect', [$this, 'enforceCanonicalLanguage'], 2);
+        add_filter('redirect_canonical', [$this, 'preserveLanguageHome'], 10, 1);
 
         // Permalinks nach der Sprache DES POSTS.
         add_filter('post_link', [$this, 'filterPostPermalink'], 10, 2);
@@ -78,8 +79,13 @@ final class Routing
         foreach ($this->languages->config()->nonDefault() as $language) {
             $code = $language->code;
 
-            // Sprach-Startseite (/de/ -> Front-Query mit rh_lang).
-            $prefixed[$code . '/?$'] = 'index.php?rh_lang=' . $code;
+            // Sprach-Startseite: LEERE Home-Query (index.php ohne Extra-Var).
+            // WordPress' Static-Front-Page-Swap greift nur, wenn die Query keine
+            // fremden Query-Vars trägt (array_diff gegen preview/page/paged/cpage).
+            // Ein angehängtes rh_lang würde /de/ auf den Blog-Index kippen statt
+            // die (übersetzte) Startseite zu zeigen. Die Sprache kommt ohnehin aus
+            // dem Pfad (detectLanguage), nicht aus dieser Var.
+            $prefixed[$code . '/?$'] = 'index.php';
 
             foreach ($rules as $regex => $query) {
                 // Sitemap-Regeln nicht duplizieren: /de/wp-sitemap.xml wäre sonst
@@ -234,6 +240,23 @@ final class Routing
     public function filterCurrentContextLink(string $url): string
     {
         return $this->prefixUrl($url, $this->languages->current());
+    }
+
+    /**
+     * WordPress' redirect_canonical würde die Sprach-Startseite (/de/) auf die
+     * kanonische Wurzel (/) umleiten, weil es die Front-Page nur unter / kennt.
+     * Für eine Nicht-Default-Startseite unterbinden, sonst ist /de/ nie erreichbar.
+     *
+     * @param string|false $redirectUrl
+     * @return string|false
+     */
+    public function preserveLanguageHome(mixed $redirectUrl): mixed
+    {
+        if (is_front_page() && ! $this->languages->isCurrentDefault()) {
+            return false;
+        }
+
+        return $redirectUrl;
     }
 
     /**
