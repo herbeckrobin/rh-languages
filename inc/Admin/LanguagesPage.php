@@ -89,6 +89,8 @@ final class LanguagesPage
 
         echo '<p><button type="submit" class="rhbp-btn rhbp-btn--primary">' . esc_html__('Speichern', 'rh-languages') . '</button></p>';
         echo '</form>';
+
+        $this->renderSnippets();
     }
 
     /**
@@ -183,6 +185,38 @@ final class LanguagesPage
             );
             echo '</div>';
         }
+        echo '</div>';
+    }
+
+    /**
+     * Copy-Paste-Snippets, um den Switcher frei im Theme zu platzieren.
+     */
+    private function renderSnippets(): void
+    {
+        $php = "<?php foreach ( rh_lang_links() as \$l ) : ?>\n"
+            . "  <a href=\"<?php echo esc_url( \$l['url'] ); ?>\"\n"
+            . "     hreflang=\"<?php echo esc_attr( \$l['hreflang'] ); ?>\"\n"
+            . "     class=\"lang <?php echo \$l['current'] ? 'is-active' : ''; ?>\">\n"
+            . "    <?php echo esc_html( \$l['label'] ); ?>\n"
+            . "  </a>\n"
+            . "<?php endforeach; ?>";
+
+        echo '<h3 class="rhlang-h">' . esc_html__('Eigene Switcher-Buttons', 'rh-languages') . '</h3>';
+        echo '<p class="rhlang-intro">' . esc_html__('Den Sprach-Switcher frei im Theme platzieren. rh_lang_links() gibt dir pro Sprache code, label, hreflang, url und current (bool) zum eigenen Markup. Gleiche Auswahl-Logik wie Block und Shortcode.', 'rh-languages') . '</p>';
+
+        $this->snippet(__('PHP im Theme-Template (volle Kontrolle über das Markup)', 'rh-languages'), 'rhlang-snip-php', $php);
+        $this->snippet(__('Shortcode (in Inhalt oder Widget)', 'rh-languages'), 'rhlang-snip-sc', '[rh_language_switcher]');
+        $this->snippet(__('Standard-Markup 1:1 im Template', 'rh-languages'), 'rhlang-snip-fn', "<?php echo rh_lang_switcher_html(); ?>");
+
+        echo '<p class="rhlang-hint">' . esc_html__('Ohne Argument nutzt rh_lang_links() das aktuelle Objekt (Einzelseite = Gegenstück der Übersetzungsgruppe, sonst die Sprach-Startseite). Für ein bestimmtes Objekt: rh_lang_links( $post_id ).', 'rh-languages') . '</p>';
+    }
+
+    private function snippet(string $label, string $id, string $code): void
+    {
+        echo '<div class="rhlang-snippet">';
+        echo '<div class="rhlang-snippet__head"><strong>' . esc_html($label) . '</strong>';
+        echo '<button type="button" class="rhbp-btn rhbp-btn--ghost" data-rhbp-copy="#' . esc_attr($id) . '">' . esc_html__('Kopieren', 'rh-languages') . '</button></div>';
+        echo '<pre id="' . esc_attr($id) . '" class="rhlang-code">' . esc_html($code) . '</pre>';
         echo '</div>';
     }
 

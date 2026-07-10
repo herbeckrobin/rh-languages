@@ -124,3 +124,84 @@ if (! function_exists('rh_lang_home_url')) {
             : $base . '/' . $code . '/';
     }
 }
+
+if (! function_exists('rh_lang_links')) {
+    /**
+     * Die Sprach-Links des aktuellen (oder eines gegebenen) Objekts, fertig zum
+     * Loopen im Theme-Template. Pro konfigurierter Sprache:
+     *   [ 'code', 'label', 'hreflang', 'url', 'current' => bool ]
+     *
+     * Auf einer Einzelseite zeigt `url` auf das Gegenstück derselben Gruppe,
+     * sonst (Archiv/Startseite ohne eigenes Objekt) auf die Sprach-Startseite.
+     *
+     * @param int|null $postId Objekt-ID, oder null für das aktuelle.
+     * @return array<int, array{code: string, label: string, hreflang: string, url: string, current: bool}>
+     */
+    function rh_lang_links(?int $postId = null): array
+    {
+        $api = Languages::instance();
+        if ($api === null || ! $api->config()->isConfigured()) {
+            return [];
+        }
+
+        $current = $api->current();
+        $queried = $postId ?? (is_singular() ? (int) get_queried_object_id() : 0);
+        $translations = $queried > 0 ? $api->translations($queried) : [];
+
+        $out = [];
+        foreach ($api->config()->all() as $language) {
+            $code = $language->code;
+
+            if ($queried > 0 && isset($translations[$code])) {
+                $url = get_permalink($translations[$code]);
+            } else {
+                $url = rh_lang_home_url($code);
+            }
+            if (! is_string($url) || $url === '') {
+                continue;
+            }
+
+            $out[] = [
+                'code' => $code,
+                'label' => $language->label,
+                'hreflang' => $language->hreflang,
+                'url' => $url,
+                'current' => $code === $current,
+            ];
+        }
+
+        return $out;
+    }
+}
+
+if (! function_exists('rh_lang_switcher_html')) {
+    /**
+     * Fertiges `<ul>`-Markup des Switchers (dieselbe Ausgabe wie Block/Shortcode).
+     * Wird intern von render.php und dem Shortcode genutzt, im Theme nur nötig,
+     * wenn man das Standard-Markup 1:1 will, sonst lieber rh_lang_links() loopen.
+     *
+     * @param string $wrapperAttributes Fertige Attribute fürs <ul> (z.B. aus
+     *                                   get_block_wrapper_attributes()); leer = eigene Klasse.
+     */
+    function rh_lang_switcher_html(string $wrapperAttributes = ''): string
+    {
+        $links = rh_lang_links();
+        if (count($links) < 2) {
+            return '';
+        }
+
+        $items = '';
+        foreach ($links as $link) {
+            $class = 'rh-language-switcher__item' . ($link['current'] ? ' is-current' : '');
+            $aria = $link['current'] ? ' aria-current="true"' : '';
+            $items .= '<li class="' . esc_attr($class) . '">'
+                . '<a href="' . esc_url($link['url']) . '" hreflang="' . esc_attr($link['hreflang']) . '"' . $aria . '>'
+                . esc_html($link['label'])
+                . '</a></li>';
+        }
+
+        $attributes = $wrapperAttributes !== '' ? $wrapperAttributes : 'class="rh-language-switcher"';
+
+        return '<ul ' . $attributes . '>' . $items . '</ul>';
+    }
+}

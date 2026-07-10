@@ -46,7 +46,13 @@ rh_lang_group_of( int $id ): ?int
 rh_lang_get_translation( int $id, string $code ): ?int
 rh_lang_translations( int $id ): array   // [ 'en' => 12, 'de' => 34 ]
 rh_lang_home_url( ?string $code = null ): string
+
+// Eigene Switcher-Buttons frei im Theme:
+rh_lang_links( ?int $postId = null ): array   // pro Sprache: code, label, hreflang, url, current(bool)
+rh_lang_switcher_html( string $wrapperAttributes = '' ): string   // fertiges <ul> (wie Block/Shortcode)
 ```
+
+Für eigene Buttons `rh_lang_links()` im Template loopen. Alternativ der Shortcode `[rh_language_switcher]`, der Block "Sprach-Switcher" oder die Auto-Anzeige (Funktions-Schalter). Fertige Copy-Paste-Snippets stehen im Sprachen-Tab.
 
 Cross-Modul über die Core-Registry: `rh_blueprint()->services()->get('languages')`.
 

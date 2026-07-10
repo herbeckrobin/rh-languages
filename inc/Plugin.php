@@ -107,6 +107,7 @@ final class Plugin
 
         // Switcher-Block immer registrieren (frei platzierbar), Auto-Anzeige optional.
         (new SwitcherBlock($languages))->boot();
+        (new Shortcode())->boot();
         if (Features::enabled(Features::AUTO_SWITCHER)) {
             (new AutoSwitcher())->boot();
         }

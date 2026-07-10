@@ -90,3 +90,37 @@
 	font-size: 12px;
 	color: var(--rhbp-text-muted, #757575);
 }
+
+/* Snippets */
+.rhlang-snippet {
+	max-width: 640px;
+	margin-bottom: 12px;
+}
+
+.rhlang-snippet__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 4px;
+}
+
+.rhlang-code {
+	margin: 0;
+	padding: 12px 14px;
+	border-radius: 6px;
+	background: #1e2327;
+	color: #e6edf3;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 12px;
+	line-height: 1.5;
+	overflow-x: auto;
+	white-space: pre;
+}
+
+.rhlang-hint {
+	max-width: 640px;
+	font-size: 12px;
+	color: var(--rhbp-text-muted, #757575);
+	margin: 0.4rem 0 1.2rem;
+}
