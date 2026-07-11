@@ -148,11 +148,19 @@ if (! function_exists('rh_lang_links')) {
         $queried = $postId ?? (is_singular() ? (int) get_queried_object_id() : 0);
         $translations = $queried > 0 ? $api->translations($queried) : [];
 
+        // Ist das aktuelle Objekt die Startseite, gehören die Links auf die
+        // Sprach-Wurzel (/ bzw. /de/), NICHT auf den Post-Permalink der
+        // Front-Page-Übersetzung (/de/home-2/). Sonst zwei URLs für dieselbe
+        // Startseite (Duplicate Content).
+        $isFront = $postId === null && is_front_page();
+
         $out = [];
         foreach ($api->config()->all() as $language) {
             $code = $language->code;
 
-            if ($queried > 0 && isset($translations[$code])) {
+            if ($isFront) {
+                $url = rh_lang_home_url($code);
+            } elseif ($queried > 0 && isset($translations[$code])) {
                 $url = get_permalink($translations[$code]);
             } else {
                 $url = rh_lang_home_url($code);

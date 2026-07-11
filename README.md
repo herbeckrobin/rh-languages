@@ -15,7 +15,7 @@ Das ist der Polylang-Ansatz, aber schlank und core-nativ (kein serialisierter Bl
 
 - **Sprach-Registry** im rh-Blueprint-Menü (Tab "Sprachen"): Code, Locale, Bezeichnung, hreflang, eine Standardsprache.
 - **URL-Routing**: Standardsprache ohne Prefix, alle anderen mit (`/about/` vs `/de/ueber/`). Duplicate-Content-Schutz per 301.
-- **Sprachtrennung**: Frontend-Queries zeigen nur Inhalte der aktiven Sprache (Opt-out per `'rh_lang' => 'all'`).
+- **Sprachtrennung**: Frontend-Queries zeigen nur Inhalte der aktiven Sprache (Opt-out per `'rhlang_skip' => true`).
 - **Sprach-Switcher** als SSR-Block (`rh/language-switcher`): verlinkt aufs Gegenstück der aktuellen Seite, reiner Text-Switch, keine Flaggen.
 - **hreflang + x-default** und das `html lang`-Attribut, aus einer Quelle (koexistiert mit rh-seo).
 - **Editor-UI**: angepinntes Sprach-Icon oben rechts im Editor-Header. Klick öffnet die Sprachen-Sidebar mit "+ Übersetzung anlegen" (dupliziert als Draft, springt in den neuen Beitrag).

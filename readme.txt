@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.1.2
+Stable tag: 0.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,7 @@ RH Languages adds multilingual support the WordPress-native way, without a third
 
 * Language registry (code, locale, label, hreflang, one default) under RH Blueprint > Sprachen
 * URL routing: default language without prefix, others prefixed (/about/ vs /de/ueber/), with a 301 guard against duplicate content
-* Language separation of front-end queries (opt out per query with 'rh_lang' => 'all')
+* Language separation of front-end queries (opt out per query with 'rhlang_skip' => true)
 * Language switcher as an SSR block (rh/language-switcher), linking to the counterpart of the current page
 * hreflang + x-default and the html lang attribute, from a single source (coexists with rh-seo)
 * Editor UI: a pinned language icon in the editor header, opening a Languages sidebar with "create translation" (duplicates as a draft)
@@ -33,6 +33,11 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.1.3 =
+* New: the default language is now an explicit choice in the Languages tab, decoupled from the WordPress site language (keep a German admin with English as the front-end default). Falls back to the WP language when unset.
+* Fix: when a translation is the static front page, switcher and hreflang now link to the language root (/ resp. /de/) instead of the raw post permalink (avoids duplicate URLs for the same home).
+* Doc: query opt-out is 'rhlang_skip' => true (readme said the old 'rh_lang' => 'all').
 
 = 0.1.2 =
 * New: template tags for custom switchers anywhere in the theme, rh_lang_links() (per-language code/label/hreflang/url/current) and rh_lang_switcher_html(), a [rh_language_switcher] shortcode, and copy-paste snippets on the settings page.

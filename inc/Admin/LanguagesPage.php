@@ -103,17 +103,18 @@ final class LanguagesPage
         $siteLabel = $locales[$siteLocale]['label'] ?? $siteLocale;
 
         echo '<h3 class="rhlang-h">' . esc_html__('Sprachen', 'rh-languages') . '</h3>';
-        echo '<p class="rhlang-intro">' . esc_html__('Sprachen aus der WordPress-Liste wählen. Die Standardsprache (ohne URL-Prefix) folgt automatisch der WordPress-Sprache, alle anderen bekommen ihren Code als Prefix (z.B. /de/). Zeile leer lassen zum Entfernen.', 'rh-languages') . '</p>';
+        echo '<p class="rhlang-intro">' . esc_html__('Sprachen aus der WordPress-Liste wählen. Die Standardsprache (ohne URL-Prefix) markieren, alle anderen bekommen ihren Code als Prefix (z.B. /de/). Zeile leer lassen zum Entfernen.', 'rh-languages') . '</p>';
 
         echo '<p class="rhlang-note">'
             . sprintf(
                 /* translators: %s: current WordPress site language name */
-                esc_html__('WordPress-Sprache aktuell: %s. Sie ist automatisch die Standardsprache. Zum Ändern: Einstellungen → Allgemein → Website-Sprache.', 'rh-languages'),
+                esc_html__('Die Standardsprache ist frei wählbar und unabhängig von der WordPress-Sprache (aktuell: %s). So kannst du z.B. ein deutsches Backend behalten und trotzdem Englisch als Standard fahren. Ohne eigene Wahl folgt die Standardsprache der WordPress-Sprache.', 'rh-languages'),
                 '<strong>' . esc_html($siteLabel) . '</strong>'
             )
             . '</p>';
 
         echo '<table class="rhlang-table"><thead><tr>';
+        echo '<th class="rhlang-cell-default">' . esc_html__('Standard', 'rh-languages') . '</th>';
         echo '<th>' . esc_html__('Sprache', 'rh-languages') . '</th>';
         echo '<th>' . esc_html__('URL-Prefix', 'rh-languages') . '</th>';
         echo '</tr></thead><tbody>';
@@ -138,6 +139,8 @@ final class LanguagesPage
 
             echo '<tr>';
 
+            echo '<td class="rhlang-cell-default"><input type="radio" name="lang_default" value="' . esc_attr((string) $i) . '"' . checked($isDefault, true, false) . '></td>';
+
             echo '<td><select name="lang_locale[' . (int) $i . ']" class="rhlang-select">';
             echo '<option value="">' . esc_html__('(keine)', 'rh-languages') . '</option>';
             foreach ($locales as $locale => $meta) {
@@ -148,11 +151,7 @@ final class LanguagesPage
                     esc_html($meta['label'] . ' (' . $locale . ')')
                 );
             }
-            echo '</select>';
-            if ($isDefault && $code !== '') {
-                echo ' <span class="rhbp-pill rhbp-pill--accent">' . esc_html__('Standard', 'rh-languages') . '</span>';
-            }
-            echo '</td>';
+            echo '</select></td>';
 
             if ($code === '') {
                 $prefix = '';
@@ -229,16 +228,17 @@ final class LanguagesPage
             wp_die(esc_html__('Keine Berechtigung.', 'rh-languages'));
         }
 
-        // Sprachen: aus den gewählten WP-Locales bauen (kein Freitext). Die
-        // Standardsprache wird NICHT hier gewählt, sondern zur Laufzeit aus der
-        // WP-Sprache abgeleitet (Config::resolveDefaultCode).
+        // Sprachen aus den gewählten WP-Locales bauen (kein Freitext).
         $chosen = isset($_POST['lang_locale']) && is_array($_POST['lang_locale']) ? wp_unslash($_POST['lang_locale']) : [];
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce oben geprüft.
+        $defaultIndex = isset($_POST['lang_default']) ? (int) $_POST['lang_default'] : -1;
 
         $available = WpLocales::available();
         $list = [];
         $seen = [];
+        $defaultCode = '';
 
-        foreach ($chosen as $rawLocale) {
+        foreach ($chosen as $index => $rawLocale) {
             $locale = sanitize_text_field((string) $rawLocale);
             if ($locale === '' || ! isset($available[$locale])) {
                 continue;
@@ -250,6 +250,10 @@ final class LanguagesPage
             }
             $seen[$code] = true;
 
+            if ((int) $index === $defaultIndex) {
+                $defaultCode = $code;
+            }
+
             $list[] = [
                 'code' => $code,
                 'locale' => $locale,
@@ -259,6 +263,8 @@ final class LanguagesPage
         }
 
         rhbp_update_setting(Config::GROUP_ID, Config::FIELD_LIST, $list);
+        // Explizite Standardsprache (leer = fällt auf die WP-Sprache zurück).
+        rhbp_update_setting(Config::GROUP_ID, Config::FIELD_DEFAULT, $defaultCode);
 
         // Funktions-Schalter.
         $features = isset($_POST['feature']) && is_array($_POST['feature']) ? $_POST['feature'] : [];

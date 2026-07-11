@@ -74,6 +74,18 @@ final class Head
      */
     private function alternateUrls(): array
     {
+        // Startseite ZUERST prüfen: die statische Front-Page ist auch is_singular(),
+        // aber ihre kanonische URL ist die Sprach-Wurzel (/ bzw. /de/), nicht der
+        // Post-Permalink der Übersetzung.
+        if (is_front_page()) {
+            $urls = [];
+            foreach ($this->languages->config()->codes() as $code) {
+                $urls[$code] = rh_lang_home_url($code);
+            }
+
+            return $urls;
+        }
+
         // Einzelseite/-post: echte Übersetzungen der Gruppe.
         if (is_singular()) {
             $postId = get_queried_object_id();
@@ -83,16 +95,6 @@ final class Head
                 if (is_string($permalink)) {
                     $urls[$code] = $permalink;
                 }
-            }
-
-            return $urls;
-        }
-
-        // Startseite: Sprach-Startseiten.
-        if (is_front_page()) {
-            $urls = [];
-            foreach ($this->languages->config()->codes() as $code) {
-                $urls[$code] = rh_lang_home_url($code);
             }
 
             return $urls;

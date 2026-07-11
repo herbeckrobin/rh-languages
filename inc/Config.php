@@ -17,6 +17,7 @@ final class Config
 {
     public const GROUP_ID = 'languages';
     public const FIELD_LIST = 'list';
+    public const FIELD_DEFAULT = 'default_code';
 
     /** @var array<int, Language>|null Lazy-Cache pro Request. */
     private ?array $languages = null;
@@ -89,6 +90,17 @@ final class Config
      */
     private function resolveDefaultCode(array $languages): string
     {
+        // 0. Explizit im Sprachen-Tab gewählte Standardsprache (entkoppelt von
+        //    der WordPress-Sprache, damit z.B. deutsches Admin + EN-Default geht).
+        $explicit = (string) rhbp_setting(self::GROUP_ID, self::FIELD_DEFAULT, '');
+        if ($explicit !== '') {
+            foreach ($languages as $language) {
+                if ($language->code === $explicit) {
+                    return $language->code;
+                }
+            }
+        }
+
         $siteLocale = $this->siteLocale();
 
         // 1. Exakte Locale-Übereinstimmung (de_DE == de_DE).
