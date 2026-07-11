@@ -124,3 +124,92 @@
 	color: var(--rhbp-text-muted, #757575);
 	margin: 0.4rem 0 1.2rem;
 }
+
+/* Strukturelle Übersetzungen (Menüs, Template-Parts) */
+.rhlang-sub {
+	margin: 1.1rem 0 0.5rem;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--rhbp-text-muted, #50575e);
+}
+
+.rhlang-struct {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: 640px;
+	margin-bottom: 1.2rem;
+}
+
+.rhlang-struct__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 12px 14px;
+}
+
+.rhlang-struct__title {
+	font-weight: 600;
+	text-decoration: none;
+	color: var(--rhbp-text, #1e1e1e);
+}
+
+.rhlang-struct__title:hover {
+	color: var(--rhbp-accent, #3858e9);
+}
+
+/* Sprach-Kürzel (Panel + Beitragslisten-Spalte) */
+.rhlang-col {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.rhlang-col__tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 30px;
+	padding: 2px 8px;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.6;
+	letter-spacing: 0.02em;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+/* aktuelle Version (kein Link) */
+.rhlang-col__tag.is-self {
+	background: var(--rhbp-accent, #3858e9);
+	border-color: var(--rhbp-accent, #3858e9);
+	color: #fff;
+}
+
+/* vorhandene Übersetzung (Link) */
+a.rhlang-col__tag.is-linked {
+	background: var(--rhbp-subtle, #f0f3ff);
+	border-color: var(--rhbp-accent, #3858e9);
+	color: var(--rhbp-accent, #3858e9);
+}
+
+a.rhlang-col__tag.is-linked:hover {
+	background: var(--rhbp-accent, #3858e9);
+	color: #fff;
+}
+
+/* fehlende Übersetzung, anlegen (Link) */
+a.rhlang-col__tag.is-create {
+	background: transparent;
+	border: 1px dashed var(--rhbp-border, #c3c4c7);
+	color: var(--rhbp-text-muted, #50575e);
+}
+
+a.rhlang-col__tag.is-create:hover {
+	border-color: var(--rhbp-accent, #3858e9);
+	color: var(--rhbp-accent, #3858e9);
+}

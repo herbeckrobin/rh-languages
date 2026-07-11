@@ -20,6 +20,7 @@ final class Features
     public const EDITOR_SIDEBAR = 'editor_sidebar';
     public const POST_COLUMN = 'post_column';
     public const NAV_PER_LANGUAGE = 'nav_per_language';
+    public const TEMPLATE_PART_PER_LANGUAGE = 'template_part_per_language';
     public const FRONT_PAGE_PER_LANGUAGE = 'front_page_per_language';
     public const LOCALE_SWITCH = 'locale_switch';
     public const AUTO_SWITCHER = 'auto_switcher';
@@ -55,6 +56,11 @@ final class Features
             self::NAV_PER_LANGUAGE => [
                 'label' => __('Menü pro Sprache', 'rh-languages'),
                 'description' => __('Der Navigations-Block nutzt das übersetzte Menü der aktiven Sprache.', 'rh-languages'),
+                'default' => true,
+            ],
+            self::TEMPLATE_PART_PER_LANGUAGE => [
+                'label' => __('Template-Parts pro Sprache', 'rh-languages'),
+                'description' => __('Footer, Header und andere Template-Parts übersetzbar. Auf /de/ rendert der übersetzte Part.', 'rh-languages'),
                 'default' => true,
             ],
             self::EDITOR_SIDEBAR => [

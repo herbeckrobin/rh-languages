@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.1.4
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +23,9 @@ RH Languages adds multilingual support the WordPress-native way, without a third
 * hreflang + x-default and the html lang attribute, from a single source (coexists with rh-seo)
 * Editor UI: a pinned language icon in the editor header, opening a Languages sidebar with "create translation" (duplicates as a draft)
 * Post list language column and filter
-* One navigation menu per language (wp_navigation is translatable), and a static front page per language
+* One navigation menu and one template part (footer, header) per language: wp_navigation and wp_template_part are translatable, the right version renders per language
+* A "Structural translations" panel in the Languages tab that lists menus and template parts with their per-language versions and one-click create (also links into the Site Editor to edit them)
+* A static front page per language
 * Theme strings follow the language via switch_to_locale() (theme .mo required)
 
 = Deliberately out of scope =
@@ -33,6 +35,12 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.0 =
+* New: template parts (footer, header, ...) are translatable just like navigation menus. On /de/ the translated part renders; the swap replaces the template-part slug so WordPress' own renderer resolves the per-language version (theme + area terms are inherited on the copy).
+* New: "Structural translations" panel in the Languages tab, listing the menus actually in use (referenced by a navigation block) and every template part, each with per-language tags. Existing translations link into the Site Editor, missing ones offer one-click create. Theme-file parts (an unmodified footer.html) are materialized into a base post on first translation.
+* New: translations of structural blocks get a language suffix in the title (e.g. "Footer (English)"), so the Site Editor no longer shows two identically named blocks.
+* Fix: translated navigation menus are now published (not draft), so the per-language navigation swap actually finds and renders them.
 
 = 0.1.4 =
 * Fix: translated menus (and any exclude_from_search post type, e.g. wp_navigation) were not found by translations(), because the internal query used post_type => 'any' which skips those types. Now queries the translatable post types explicitly, so the per-language navigation swap works.

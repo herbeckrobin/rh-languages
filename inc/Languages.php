@@ -29,6 +29,9 @@ final class Languages
     /** @var array<string, array<string, int>> Request-Memoization für translations(). */
     private array $translationCache = [];
 
+    /** @var array<string, ?int> Request-Memoization für templatePartPostId(). */
+    private array $templatePartCache = [];
+
     public function __construct(
         private readonly Config $config,
         private readonly Taxonomy $taxonomy,
@@ -179,6 +182,47 @@ final class Languages
         return $this->translationCache[$cacheKey] = $out;
     }
 
+    /**
+     * wp_template_part-Post-ID per Slug + Theme (spiegelt die Query aus
+     * render_block_core_template_part). Null bei reinem Theme-Datei-Part.
+     *
+     * Request-memoisiert (mehrere template-part-Blöcke mit gleichem Slug pro Seite
+     * feuern sonst je eine Query). $useCache=false erzwingt eine frische Query,
+     * z.B. für den Re-Check unter einem Lock beim Materialisieren.
+     */
+    public function templatePartPostId(string $slug, ?string $theme = null, bool $useCache = true): ?int
+    {
+        $theme ??= get_stylesheet();
+        $cacheKey = $theme . '|' . $slug;
+
+        if ($useCache && array_key_exists($cacheKey, $this->templatePartCache)) {
+            return $this->templatePartCache[$cacheKey];
+        }
+
+        $query = new \WP_Query([
+            'post_type' => 'wp_template_part',
+            'post_status' => 'publish',
+            'post_name__in' => [$slug],
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'no_found_rows' => true,
+            'ignore_sticky_posts' => true,
+            'suppress_filters' => false,
+            self::QUERY_SKIP => true,
+            'tax_query' => [
+                [
+                    'taxonomy' => 'wp_theme',
+                    'field' => 'name',
+                    'terms' => $theme,
+                ],
+            ],
+        ]);
+
+        $result = $query->posts !== [] ? (int) $query->posts[0] : null;
+
+        return $this->templatePartCache[$cacheKey] = $result;
+    }
+
     // --- Zuweisung ---
 
     public function assignLanguage(int $postId, string $code): void
@@ -188,12 +232,14 @@ final class Languages
         }
         wp_set_object_terms($postId, $code, Taxonomy::TAX_LANG, false);
         $this->translationCache = [];
+        $this->templatePartCache = [];
     }
 
     public function assignGroup(int $postId, int $groupTermId): void
     {
         wp_set_object_terms($postId, [$groupTermId], Taxonomy::TAX_GROUP, false);
         $this->translationCache = [];
+        $this->templatePartCache = [];
     }
 
     /**

@@ -32,6 +32,11 @@ final class Frontend
             add_filter('rh-blueprint/languages/post_types', [$this, 'addNavigationPostType']);
             add_filter('render_block_data', [$this, 'swapNavigationRef']);
         }
+
+        if (Features::enabled(Features::TEMPLATE_PART_PER_LANGUAGE)) {
+            add_filter('rh-blueprint/languages/post_types', [$this, 'addTemplatePartPostType']);
+            add_filter('render_block_data', [$this, 'swapTemplatePartSlug']);
+        }
     }
 
     /**
@@ -43,6 +48,19 @@ final class Frontend
     public function addNavigationPostType(array $types): array
     {
         $types[] = 'wp_navigation';
+
+        return $types;
+    }
+
+    /**
+     * Template-Parts (Footer/Header) sind übersetzbar wie normale Posts.
+     *
+     * @param array<int, string> $types
+     * @return array<int, string>
+     */
+    public function addTemplatePartPostType(array $types): array
+    {
+        $types[] = 'wp_template_part';
 
         return $types;
     }
@@ -105,5 +123,57 @@ final class Frontend
         }
 
         return $parsed;
+    }
+
+    /**
+     * Den vom Template-Part-Block referenzierten Part auf die aktuelle Sprache
+     * umbiegen. core/template-part referenziert über slug + theme (nicht über eine
+     * Post-ID), also tauschen wir das `slug`-Attribut. WP-Core löst den Part dann
+     * über seine eigene WP_Query (post_name + wp_theme-Term) auf.
+     *
+     * @param array<string, mixed> $parsed
+     * @return array<string, mixed>
+     */
+    public function swapTemplatePartSlug(array $parsed): array
+    {
+        if (($parsed['blockName'] ?? '') !== 'core/template-part' || $this->languages->isCurrentDefault()) {
+            return $parsed;
+        }
+        // Editor-Canvas / ServerSideRender nicht anfassen, dort soll die Basis stehen.
+        if (is_admin() || (defined('REST_REQUEST') && REST_REQUEST)) {
+            return $parsed;
+        }
+
+        $slug = isset($parsed['attrs']['slug']) ? (string) $parsed['attrs']['slug'] : '';
+        if ($slug === '') {
+            return $parsed;
+        }
+
+        $translatedSlug = $this->translatedTemplatePartSlug($slug);
+        if ($translatedSlug !== null) {
+            $parsed['attrs']['slug'] = $translatedSlug;
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Slug der Template-Part-Übersetzung in der aktuellen Sprache, oder null.
+     */
+    private function translatedTemplatePartSlug(string $slug): ?string
+    {
+        $basePostId = $this->languages->templatePartPostId($slug);
+        if ($basePostId === null) {
+            return null; // reiner Theme-Datei-Part (kein Post) -> keine Übersetzung
+        }
+
+        $translationId = $this->languages->getTranslation($basePostId, $this->languages->current());
+        if ($translationId === null || $translationId === $basePostId) {
+            return null;
+        }
+
+        $translated = get_post($translationId);
+
+        return $translated instanceof \WP_Post ? $translated->post_name : null;
     }
 }

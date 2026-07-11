@@ -16,6 +16,14 @@ use WP_Query;
  */
 final class Query
 {
+    /**
+     * Strukturelle Bausteine: ihre Sprachwahl macht komplett der Render-Swap
+     * (slug/ref), NICHT der Query-Filter. Sie dürfen nie sprachgefiltert werden,
+     * sonst versteckt der Filter Sekundärsprach-Parts vor dem Site-Editor (REST
+     * ist nicht is_admin()) und "Element existiert nicht".
+     */
+    private const STRUCTURAL_TYPES = ['wp_navigation', 'wp_template_part'];
+
     public function __construct(private readonly Languages $languages)
     {
     }
@@ -117,6 +125,10 @@ final class Query
 
         $types = is_array($postType) ? $postType : [$postType];
         foreach ($types as $type) {
+            // Strukturelle Typen nie sprachfiltern (Render-Swap regelt die Sprache).
+            if (in_array($type, self::STRUCTURAL_TYPES, true)) {
+                continue;
+            }
             if (in_array($type, $translatable, true)) {
                 return true;
             }

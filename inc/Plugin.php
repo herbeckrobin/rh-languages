@@ -9,6 +9,7 @@ use RhBlueprint\Core\Settings\SettingsPage;
 use RhLanguages\Admin\CreateController;
 use RhLanguages\Admin\LanguagesPage;
 use RhLanguages\Admin\PostList;
+use RhLanguages\Admin\StructuralPanel;
 use RhLanguages\Admin\TranslateController;
 use RhLanguages\Blocks\SwitcherBlock;
 
@@ -102,8 +103,16 @@ final class Plugin
 
         // --- Optionale Funktionen (Feature-Schalter im Sprachen-Tab) ---
         (new Head($languages))->boot();      // hreflang / html lang / view transitions
-        (new Frontend($languages))->boot();  // Startseite + Menü pro Sprache
+        (new Frontend($languages))->boot();  // Startseite + Menü + Template-Parts pro Sprache
         (new Locale($languages))->boot();    // Theme-Texte übersetzen
+
+        // Die Feature-Filter (nav/template-part als übersetzbar) sind jetzt
+        // registriert. Objekt-Typ-Zuordnung der versteckten Taxonomien nachziehen,
+        // da taxonomy()->register() (früher im Boot) die späten Typen noch nicht kannte.
+        foreach ($languages->taxonomy()->postTypes() as $translatableType) {
+            register_taxonomy_for_object_type(Taxonomy::TAX_LANG, $translatableType);
+            register_taxonomy_for_object_type(Taxonomy::TAX_GROUP, $translatableType);
+        }
 
         // Switcher-Block immer registrieren (frei platzierbar), Auto-Anzeige optional.
         (new SwitcherBlock($languages))->boot();
@@ -114,6 +123,9 @@ final class Plugin
 
         // Anlege-Handler (Duplizieren als Draft) wird von Editor UND Liste genutzt.
         (new CreateController($languages))->boot();
+
+        // Management-Panel für strukturelle Bausteine (Menüs, Template-Parts).
+        (new StructuralPanel($languages))->boot();
 
         if (Features::enabled(Features::EDITOR_SIDEBAR)) {
             (new TranslateController($languages))->boot();

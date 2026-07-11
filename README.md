@@ -20,7 +20,8 @@ Das ist der Polylang-Ansatz, aber schlank und core-nativ (kein serialisierter Bl
 - **hreflang + x-default** und das `html lang`-Attribut, aus einer Quelle (koexistiert mit rh-seo).
 - **Editor-UI**: angepinntes Sprach-Icon oben rechts im Editor-Header. Klick öffnet die Sprachen-Sidebar mit "+ Übersetzung anlegen" (dupliziert als Draft, springt in den neuen Beitrag).
 - **Post-Listen**: Sprach-Spalte + Filter.
-- **Menü pro Sprache**: `wp_navigation` ist übersetzbar, der Navigation-Block wird sprachrichtig umgebogen.
+- **Menü + Template-Part pro Sprache**: `wp_navigation` und `wp_template_part` (Footer, Header) sind übersetzbar. Auf `/de/` rendert die übersetzte Version. Beim Template-Part wird der `slug` getauscht, den Rest löst WordPress' eigener Renderer auf (Theme- und Area-Term werden auf die Kopie vererbt).
+- **Panel "Strukturelle Übersetzungen"** im Sprachen-Tab: listet die genutzten Menüs (per Navigations-Block eingebunden) und alle Template-Parts mit ihren Sprach-Kürzeln. Vorhandene Übersetzung verlinkt in den Site-Editor, fehlende bietet "+ anlegen". Reine Theme-Datei-Parts (unveränderte `footer.html`) werden beim ersten Übersetzen zu einem Basis-Post materialisiert. Übersetzungen bekommen einen Sprach-Suffix im Titel (z.B. "Footer (English)"), damit der Site-Editor keine zwei gleichnamigen Bausteine mehr zeigt.
 - **Startseite pro Sprache** (`page_on_front` / `page_for_posts`).
 - **Theme-Strings** folgen der Sprache über `switch_to_locale()` (Theme-`.mo` vorausgesetzt).
 

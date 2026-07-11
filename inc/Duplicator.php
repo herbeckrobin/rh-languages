@@ -23,6 +23,9 @@ final class Duplicator
     /** Post-Status, die als "Übersetzung existiert bereits" zählen. */
     public const EXISTING_STATUSES = ['publish', 'draft', 'pending', 'future', 'private'];
 
+    /** Site-Editor-Bausteine ohne eigenen Content-Titel -> Sprach-Suffix. */
+    private const STRUCTURAL_TYPES = ['wp_navigation', 'wp_template_part'];
+
     public function __construct(private readonly Languages $languages)
     {
     }
@@ -80,10 +83,22 @@ final class Duplicator
         }
 
         try {
+            // Strukturelle Bausteine (Nav, Template-Part) teilen sich im Site-Editor
+            // sonst den Default-Namen -> Sprach-Suffix, damit sie unterscheidbar sind.
+            $title = $source->post_title;
+            if (in_array($source->post_type, self::STRUCTURAL_TYPES, true)) {
+                $language = $this->languages->config()->byCode($targetCode);
+                $suffix = $language !== null ? $language->label : strtoupper($targetCode);
+                $title = trim($title) . ' (' . $suffix . ')';
+            }
+
+            // Strukturelle Bausteine rendern live (kein Draft-Review wie bei
+            // Seiten/Posts), also direkt publish, sonst findet der Render-Swap sie
+            // nicht (getTranslation sucht standardmäßig nur publish).
             $newId = wp_insert_post([
                 'post_type' => $source->post_type,
-                'post_status' => 'draft',
-                'post_title' => $source->post_title,
+                'post_status' => in_array($source->post_type, self::STRUCTURAL_TYPES, true) ? 'publish' : 'draft',
+                'post_title' => $title,
                 'post_content' => $source->post_content,
                 'post_excerpt' => $source->post_excerpt,
                 'post_parent' => (int) $source->post_parent,
@@ -99,6 +114,7 @@ final class Duplicator
             $newId = (int) $newId;
 
             $this->copyMeta($sourceId, $newId);
+            $this->copyTemplatePartTerms($source, $newId);
 
             $group = $this->languages->ensureGroup($sourceId);
             $this->languages->assignLanguage($newId, $targetCode);
@@ -112,19 +128,122 @@ final class Duplicator
         }
     }
 
+    /**
+     * Template-Part-Kopie: wp_theme-Term (PFLICHT, sonst findet der Renderer die
+     * Kopie nicht) und wp_template_part_area (Editor-Konsistenz) von der Quelle
+     * übernehmen.
+     */
+    private function copyTemplatePartTerms(WP_Post $source, int $targetId): void
+    {
+        if ($source->post_type !== 'wp_template_part') {
+            return;
+        }
+
+        foreach (['wp_theme', 'wp_template_part_area'] as $taxonomy) {
+            $terms = wp_get_object_terms($source->ID, $taxonomy, ['fields' => 'slugs']);
+            if (! is_wp_error($terms) && $terms !== []) {
+                wp_set_object_terms($targetId, $terms, $taxonomy, false);
+            }
+        }
+    }
+
+    /**
+     * Template-Part per Slug (statt Post-ID) übersetzen. Ist der Part nur eine
+     * Theme-Datei (kein Post), wird zuerst der Basis-Post materialisiert, damit
+     * die Übersetzungsgruppe einen Default-Post hat. Für die Site-Editor-UI +
+     * das Management-Panel (Footer/Header sind oft reine Theme-Dateien).
+     */
+    public function duplicateTemplatePartBySlug(string $slug, string $theme, string $targetCode): int|WP_Error
+    {
+        $baseId = $this->ensureTemplatePartBase($slug, $theme);
+        if (is_wp_error($baseId)) {
+            return $baseId;
+        }
+
+        return $this->duplicate($baseId, $targetCode);
+    }
+
+    /**
+     * Basis-Post eines Template-Parts sicherstellen: vorhandenen Post nehmen oder
+     * aus der Theme-Datei materialisieren (Content + wp_theme + area), plus
+     * Default-Sprache und Gruppe. Gibt die Post-ID zurück.
+     */
+    private function ensureTemplatePartBase(string $slug, string $theme): int|WP_Error
+    {
+        $existing = $this->languages->templatePartPostId($slug, $theme);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        // Ohne Lock legen zwei fast gleichzeitige Requests (Doppelklick auf einen
+        // reinen Theme-Datei-Part) je einen Basis-Post an, der zweite mit
+        // abweichendem Slug (footer-2) -> verwaistes Duplikat. Lock + Re-Check.
+        $lock = 'rhlang_lock_part_' . md5($theme . '|' . $slug);
+        if (! $this->acquireNamedLock($lock)) {
+            $again = $this->languages->templatePartPostId($slug, $theme, false);
+
+            return $again ?? new WP_Error('rhlang_busy', __('Wird bereits angelegt, bitte kurz warten.', 'rh-languages'), ['status' => 409]);
+        }
+
+        try {
+            $existing = $this->languages->templatePartPostId($slug, $theme, false);
+            if ($existing !== null) {
+                return $existing;
+            }
+
+            $fileTemplate = get_block_file_template($theme . '//' . $slug, 'wp_template_part');
+            if (! $fileTemplate || empty($fileTemplate->content)) {
+                return new WP_Error('rhlang_no_part', __('Template-Part nicht gefunden.', 'rh-languages'), ['status' => 404]);
+            }
+
+            $newId = wp_insert_post([
+                'post_type' => 'wp_template_part',
+                'post_status' => 'publish',
+                'post_name' => $slug,
+                'post_title' => $fileTemplate->title !== '' ? $fileTemplate->title : $slug,
+                'post_content' => $fileTemplate->content,
+            ], true);
+
+            if (is_wp_error($newId)) {
+                return $newId;
+            }
+
+            $newId = (int) $newId;
+
+            wp_set_object_terms($newId, $theme, 'wp_theme', false);
+            wp_set_object_terms($newId, $fileTemplate->area !== '' ? $fileTemplate->area : 'uncategorized', 'wp_template_part_area', false);
+
+            $this->languages->assignLanguage($newId, $this->languages->defaultCode());
+            $this->languages->ensureGroup($newId);
+
+            return $newId;
+        } finally {
+            $this->releaseNamedLock($lock);
+        }
+    }
+
     private function lockKey(int $sourceId, string $targetCode): string
     {
         return 'rhlang_lock_' . $sourceId . '_' . $targetCode;
     }
 
-    /**
-     * Atomarer Lock. add_option scheitert, wenn der Key existiert. Ein verwaister
-     * Lock (Request abgestürzt) wird nach 30s gestohlen.
-     */
     private function acquireLock(int $sourceId, string $targetCode): bool
     {
-        $key = $this->lockKey($sourceId, $targetCode);
+        return $this->acquireNamedLock($this->lockKey($sourceId, $targetCode));
+    }
 
+    private function releaseLock(int $sourceId, string $targetCode): void
+    {
+        $this->releaseNamedLock($this->lockKey($sourceId, $targetCode));
+    }
+
+    /**
+     * Atomarer Lock über einen benannten Key. add_option scheitert, wenn der Key
+     * existiert (Unique-Index auf option_name). Ein verwaister Lock (Request
+     * abgestürzt) wird nach 30s gestohlen.
+     */
+    private function acquireNamedLock(string $key): bool
+    {
         if (add_option($key, time(), '', 'no')) {
             return true;
         }
@@ -139,9 +258,9 @@ final class Duplicator
         return false;
     }
 
-    private function releaseLock(int $sourceId, string $targetCode): void
+    private function releaseNamedLock(string $key): void
     {
-        delete_option($this->lockKey($sourceId, $targetCode));
+        delete_option($key);
     }
 
     /**
