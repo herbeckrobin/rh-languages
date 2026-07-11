@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.1.3
+Stable tag: 0.1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.1.4 =
+* Fix: translated menus (and any exclude_from_search post type, e.g. wp_navigation) were not found by translations(), because the internal query used post_type => 'any' which skips those types. Now queries the translatable post types explicitly, so the per-language navigation swap works.
 
 = 0.1.3 =
 * New: the default language is now an explicit choice in the Languages tab, decoupled from the WordPress site language (keep a German admin with English as the front-end default). Falls back to the WP language when unset.

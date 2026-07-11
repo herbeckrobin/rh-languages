@@ -149,8 +149,11 @@ final class Languages
             return $this->translationCache[$cacheKey] = [$this->langOfPost($postId) => $postId];
         }
 
+        // Bewusst die übersetzbaren Post-Types EXPLIZIT, nicht 'any': 'any' schließt
+        // Post-Types mit exclude_from_search=true aus (u.a. wp_navigation), sonst
+        // fände der Menü-Swap die übersetzten Menüs nie. Betrifft jeden solchen Typ.
         $members = get_posts([
-            'post_type' => 'any',
+            'post_type' => $this->taxonomy->postTypes(),
             'post_status' => $statuses,
             'numberposts' => -1,
             'fields' => 'ids',
