@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.6
+Stable tag: 0.2.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.7 =
+* New: a translation inherits the source post's publish date (`post_date`/`post_date_gmt`). Previously every translation created in one batch shared the same timestamp, so any date-ordered list (e.g. a featured-works query) came out in a different order per language. New translations now keep the original's date (`edit_date` makes it survive the later publish). Existing translations can be aligned with `wp rhlang sync-dates [--dry-run] [--post_type=<type>]`, which sets each translation's date to its default-language sibling's date.
 
 = 0.2.6 =
 * Fix: with shared slugs (0.2.5) the default-language single URL (e.g. `/artwork/what-if/`) redirected to the translation. WordPress does not apply the language tax_query to `is_singular` queries (a single is treated as unique by name), so when two languages share a slug the name query returns both posts and WordPress picks the newer one. Single views now disambiguate a shared slug by the active language via a `the_posts` filter (the default language includes term-less posts). `/artwork/what-if/` resolves to the English post, `/de/artwork/what-if/` to the German one.

@@ -105,6 +105,15 @@ final class Duplicator
                 'menu_order' => (int) $source->menu_order,
                 'comment_status' => $source->comment_status,
                 'ping_status' => $source->ping_status,
+                // Datum der Quelle erben. Eine Übersetzung ist inhaltlich dasselbe
+                // Werk, soll also gleich datiert sein, sonst tragen alle in einem
+                // Rutsch angelegten Übersetzungen denselben Zeitstempel und jede
+                // datums-sortierte Liste (z.B. featured-works) steht pro Sprache
+                // anders. edit_date sorgt dafür, dass das gesetzte Datum bleibt und
+                // beim späteren Publish nicht auf "jetzt" springt.
+                'post_date' => $source->post_date,
+                'post_date_gmt' => $source->post_date_gmt,
+                'edit_date' => true,
             ], true);
 
             if (is_wp_error($newId)) {

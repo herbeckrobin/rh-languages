@@ -24,6 +24,100 @@ final class Cli
     public function register(): void
     {
         WP_CLI::add_command('rhlang sync-slugs', [$this, 'syncSlugs']);
+        WP_CLI::add_command('rhlang sync-dates', [$this, 'syncDates']);
+    }
+
+    /**
+     * Setzt bei Übersetzungen das Veröffentlichungsdatum der Standardsprach-Version.
+     * Der Duplicator erbt das Datum seit 0.2.7; für Übersetzungen, die davor in
+     * einem Rutsch angelegt wurden (alle mit demselben Zeitstempel), zieht das
+     * Kommando es nach, damit datums-sortierte Listen pro Sprache gleich stehen.
+     * Idempotent.
+     *
+     * ## OPTIONS
+     *
+     * [--dry-run]
+     * : Nur anzeigen, was geändert würde. Schreibt nichts.
+     *
+     * [--post_type=<type>]
+     * : Nur diesen Post-Type behandeln. Default: alle übersetzbaren.
+     *
+     * ## EXAMPLES
+     *
+     *     wp rhlang sync-dates --dry-run
+     *     wp rhlang sync-dates --post_type=artwork
+     *
+     * @param array<int, string>    $args
+     * @param array<string, string> $assoc
+     */
+    public function syncDates(array $args, array $assoc): void
+    {
+        if (! $this->languages->config()->isConfigured()) {
+            WP_CLI::error('Keine Sprachen konfiguriert.');
+        }
+
+        $dryRun = isset($assoc['dry-run']);
+        $default = $this->languages->defaultCode();
+        $types = isset($assoc['post_type'])
+            ? [(string) $assoc['post_type']]
+            : $this->languages->taxonomy()->postTypes();
+
+        $changed = 0;
+
+        foreach ($types as $type) {
+            if (in_array($type, self::STRUCTURAL_TYPES, true)) {
+                continue;
+            }
+
+            $ids = get_posts([
+                'post_type' => $type,
+                'post_status' => self::STATUSES,
+                'posts_per_page' => -1,
+                'fields' => 'ids',
+                'no_found_rows' => true,
+                'suppress_filters' => true,
+            ]);
+
+            foreach ($ids as $postId) {
+                $postId = (int) $postId;
+
+                $terms = get_the_terms($postId, Taxonomy::TAX_LANG);
+                if (! is_array($terms) || $terms === []) {
+                    continue;
+                }
+                if ((string) $terms[0]->slug === $default) {
+                    continue; // Standardsprache ist die Datums-Quelle
+                }
+
+                $translations = $this->languages->translations($postId, self::STATUSES);
+                if (! isset($translations[$default])) {
+                    continue;
+                }
+
+                $sourceDate = (string) get_post_field('post_date', $translations[$default]);
+                $current = (string) get_post_field('post_date', $postId);
+                if ($sourceDate === '' || $sourceDate === $current) {
+                    continue;
+                }
+
+                if ($dryRun) {
+                    WP_CLI::log(sprintf('[dry-run] #%d: %s -> %s', $postId, $current, $sourceDate));
+                    $changed++;
+                    continue;
+                }
+
+                wp_update_post([
+                    'ID' => $postId,
+                    'post_date' => $sourceDate,
+                    'post_date_gmt' => (string) get_post_field('post_date_gmt', $translations[$default]),
+                    'edit_date' => true,
+                ]);
+                WP_CLI::log(sprintf('#%d: %s -> %s', $postId, $current, $sourceDate));
+                $changed++;
+            }
+        }
+
+        WP_CLI::success(sprintf('%s: %d Daten %s.', $dryRun ? 'Dry-Run' : 'Fertig', $changed, $dryRun ? 'würden geändert' : 'geändert'));
     }
 
     /**
