@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.1 =
+* Fix: custom taxonomy archives (e.g. a `series` archive on a custom post type) fell back to the index template. The language filter appended its `rh_lang` clause before the archive's own taxonomy in the tax_query, so WordPress picked the language term as the queried object (body class `tax-rh_lang` instead of `tax-series`). The queried object is now resolved and cached before the clause is appended, on taxonomy archives only. Category and tag archives were never affected (they resolve their subject via dedicated query vars).
 
 = 0.2.0 =
 * New: template parts (footer, header, ...) are translatable just like navigation menus. On /de/ the translated part renders; the swap replaces the template-part slug so WordPress' own renderer resolves the per-language version (theme + area terms are inherited on the copy).

@@ -68,6 +68,20 @@ final class Query
             return;
         }
 
+        // Custom-Taxonomie-Archiv (is_tax): das Archiv-Subjekt aus der noch
+        // unveränderten tax_query auflösen und cachen, BEVOR wir unseren
+        // rh_lang-Clause anhängen. Sonst reiht WP beim zweiten parse_tax_query
+        // in get_posts() die query-var-Taxonomie (z.B. `series`) HINTER unseren
+        // tax_query, und get_queried_object() nimmt die erste Taxonomie, also
+        // rh_lang, als Archiv-Subjekt. Die Template-Hierarchie fällt dann auf
+        // index (Body-Class `tax-rh_lang` statt `tax-series`). Der cachende
+        // Aufruf hier überlebt die spätere Neu-Sortierung. Category/Tag lösen
+        // ihr Subjekt über eigene Query-Vars auf, sind also nicht betroffen
+        // (is_tax() ist dort false).
+        if ($query->is_tax()) {
+            $query->get_queried_object();
+        }
+
         $taxQuery = $query->get('tax_query');
         $taxQuery = is_array($taxQuery) ? $taxQuery : [];
 
