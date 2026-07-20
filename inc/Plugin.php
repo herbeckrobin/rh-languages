@@ -106,13 +106,18 @@ final class Plugin
         (new Frontend($languages))->boot();  // Startseite + Menü + Template-Parts pro Sprache
         (new Locale($languages))->boot();    // Theme-Texte übersetzen
 
-        // Die Feature-Filter (nav/template-part als übersetzbar) sind jetzt
-        // registriert. Objekt-Typ-Zuordnung der versteckten Taxonomien nachziehen,
-        // da taxonomy()->register() (früher im Boot) die späten Typen noch nicht kannte.
-        foreach ($languages->taxonomy()->postTypes() as $translatableType) {
-            register_taxonomy_for_object_type(Taxonomy::TAX_LANG, $translatableType);
-            register_taxonomy_for_object_type(Taxonomy::TAX_GROUP, $translatableType);
-        }
+        // Objekt-Typ-Zuordnung der versteckten Taxonomien an die übersetzbaren
+        // Post-Types nachziehen (taxonomy()->register() lief früher im Boot und
+        // kannte die per Feature-Filter ergänzten Typen wie nav/template-part noch
+        // nicht). ZUSÄTZLICH spät auf init:99 wiederholen: der Core bootet auf
+        // init:1, also VOR der üblichen CPT-Registrierung (Theme/Plugin auf
+        // init:10). Ein Attach nur hier verpasst spät registrierte CPTs (z.B.
+        // `artwork`) je nach Reihenfolge, dann hängt rh_lang nicht an ihnen, der
+        // Sprach-Filter überspringt ihre Archive und zeigt übersetzte CPTs
+        // sprachneutral (EN+DE-Dubletten). init:99 läuft nach allen CPTs, das
+        // macht die Zuordnung deterministisch. Idempotent.
+        self::attachTranslatableObjectTypes();
+        add_action('init', [self::class, 'attachTranslatableObjectTypes'], 99);
 
         // Switcher-Block immer registrieren (frei platzierbar), Auto-Anzeige optional.
         (new SwitcherBlock($languages))->boot();
@@ -134,6 +139,25 @@ final class Plugin
 
         if (Features::enabled(Features::POST_COLUMN)) {
             (new PostList($languages))->boot();
+        }
+    }
+
+    /**
+     * Hängt die versteckten Sprach-Taxonomien (rh_lang, rh_lang_group) an alle
+     * übersetzbaren Post-Types. Idempotent, läuft inline beim Core-Boot (init:1)
+     * UND spät auf init:99, damit auch CPTs erfasst werden, die erst nach dem
+     * Core-Boot registriert werden (Theme/Plugin auf init:10).
+     */
+    public static function attachTranslatableObjectTypes(): void
+    {
+        $languages = Languages::instance();
+        if ($languages === null || ! $languages->config()->isConfigured()) {
+            return;
+        }
+
+        foreach ($languages->taxonomy()->postTypes() as $translatableType) {
+            register_taxonomy_for_object_type(Taxonomy::TAX_LANG, $translatableType);
+            register_taxonomy_for_object_type(Taxonomy::TAX_GROUP, $translatableType);
         }
     }
 

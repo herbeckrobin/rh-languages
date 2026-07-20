@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.3
+Stable tag: 0.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.4 =
+* Fix: translatable custom post types registered after the core boots (the normal case: a theme or plugin registers its CPT on `init` at priority 10, while the core boots on `init:1`) were not reliably attached to the hidden language taxonomies. rh_lang only listed the post types that were public at boot time, so a late CPT's archives were not language-filtered and showed all languages mixed (duplicates for translated CPTs). The object-type attachment now also runs late on `init:99`, after all post types are registered, so any public translatable CPT is picked up automatically. Themes no longer need the `rh-blueprint/languages/post_types` filter as a workaround for this timing (the filter still works for narrowing or adding types).
 
 = 0.2.3 =
 * Fix: taxonomy archives of post types that rh_lang is not attached to (e.g. a `series` archive on an `artwork` post type) came up empty on non-default languages. The language filter still applied its strict `rh_lang` clause, but those posts can never carry a language term, so all of them were filtered out (found 0 on /de/). The filter now only applies to a custom taxonomy archive when rh_lang is actually registered for one of the taxonomy's post types (its real object_type, not the time-dependent translatable list). Such post types are shown language-neutrally (same items under every language); once rh_lang is attached to them, language separation kicks in automatically. Category and tag archives are unaffected.
