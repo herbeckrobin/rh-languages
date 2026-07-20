@@ -122,6 +122,17 @@ final class Duplicator
                 $this->languages->assignGroup($newId, $group);
             }
 
+            // Slug der Quelle übernehmen, damit die Übersetzung nicht `what-if-2`
+            // heißt (WP hängt ein Suffix an, weil der Quell-Slug im selben
+            // post_type schon belegt ist). Der Slug::shareAcrossLanguages-Filter
+            // erlaubt denselben Slug pro Sprache, das /de/-Prefix disambiguiert.
+            // MUSS nach assignLanguage laufen, damit der Filter die Zielsprache am
+            // Post findet. Nur für Nicht-Struktur-Typen (Nav/Template-Part haben
+            // keine öffentliche URL und tragen bewusst einen Sprach-Suffix im Titel).
+            if (! in_array($source->post_type, self::STRUCTURAL_TYPES, true) && $source->post_name !== '') {
+                wp_update_post(['ID' => $newId, 'post_name' => $source->post_name]);
+            }
+
             return $newId;
         } finally {
             $this->releaseLock($sourceId, $targetCode);

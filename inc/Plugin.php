@@ -93,6 +93,12 @@ final class Plugin
             return $links;
         });
 
+        // WP-CLI-Kommandos (z.B. `wp rhlang sync-slugs`) immer registrieren,
+        // damit sie auch ohne Frontend-Boot verfügbar sind.
+        if (defined('WP_CLI') && WP_CLI) {
+            (new Cli($languages))->register();
+        }
+
         if (! $languages->config()->isConfigured()) {
             return;
         }
@@ -100,6 +106,7 @@ final class Plugin
         // --- Fundament (nicht abschaltbar): Sprachtrennung + Routing ---
         (new Query($languages))->boot();
         (new Routing($languages))->boot();
+        (new Slug($languages))->boot(); // gleicher Slug pro Sprache (kein -2-Suffix)
 
         // --- Optionale Funktionen (Feature-Schalter im Sprachen-Tab) ---
         (new Head($languages))->boot();      // hreflang / html lang / view transitions

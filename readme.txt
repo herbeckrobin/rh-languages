@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.4
+Stable tag: 0.2.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.5 =
+* New: translations no longer get a `-2` slug suffix. A translation may now share its slug with the same post in another language (the `/de/` prefix already disambiguates the URL, and the language query filter resolves the right post per language). New translations created via the editor sidebar or post list take the source's slug directly. A `wp_unique_post_slug` filter keeps a suffix only when the slug really collides within the same language. Existing `-2` slugs can be normalized with `wp rhlang sync-slugs [--dry-run] [--post_type=<type>]` (idempotent; run before the site is indexed, otherwise check the 301 redirects WordPress creates).
 
 = 0.2.4 =
 * Fix: translatable custom post types registered after the core boots (the normal case: a theme or plugin registers its CPT on `init` at priority 10, while the core boots on `init:1`) were not reliably attached to the hidden language taxonomies. rh_lang only listed the post types that were public at boot time, so a late CPT's archives were not language-filtered and showed all languages mixed (duplicates for translated CPTs). The object-type attachment now also runs late on `init:99`, after all post types are registered, so any public translatable CPT is picked up automatically. Themes no longer need the `rh-blueprint/languages/post_types` filter as a workaround for this timing (the filter still works for narrowing or adding types).
