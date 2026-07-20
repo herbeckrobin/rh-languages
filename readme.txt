@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.2
+Stable tag: 0.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.3 =
+* Fix: taxonomy archives of post types that rh_lang is not attached to (e.g. a `series` archive on an `artwork` post type) came up empty on non-default languages. The language filter still applied its strict `rh_lang` clause, but those posts can never carry a language term, so all of them were filtered out (found 0 on /de/). The filter now only applies to a custom taxonomy archive when rh_lang is actually registered for one of the taxonomy's post types (its real object_type, not the time-dependent translatable list). Such post types are shown language-neutrally (same items under every language); once rh_lang is attached to them, language separation kicks in automatically. Category and tag archives are unaffected.
 
 = 0.2.2 =
 * Fix: the language switcher pointed at the language home page on every archive (taxonomy, category, date, author) instead of the same archive in the other language. `rh_lang_links()` only resolved a target on singular views and fell back to the home root otherwise. It now uses the same per-language path computation as the hreflang alternates (extracted into a shared method), so both stay in sync. Singular views (translation permalinks) and the front page (language roots) are unchanged.

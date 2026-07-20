@@ -64,22 +64,10 @@ final class Query
             return;
         }
 
+        // appliesTo() hat für is_tax-Archive das Archiv-Subjekt bereits aufgelöst
+        // und gecached (siehe dort), bevor wir hier den rh_lang-Clause anhängen.
         if (! $this->appliesTo($query)) {
             return;
-        }
-
-        // Custom-Taxonomie-Archiv (is_tax): das Archiv-Subjekt aus der noch
-        // unveränderten tax_query auflösen und cachen, BEVOR wir unseren
-        // rh_lang-Clause anhängen. Sonst reiht WP beim zweiten parse_tax_query
-        // in get_posts() die query-var-Taxonomie (z.B. `series`) HINTER unseren
-        // tax_query, und get_queried_object() nimmt die erste Taxonomie, also
-        // rh_lang, als Archiv-Subjekt. Die Template-Hierarchie fällt dann auf
-        // index (Body-Class `tax-rh_lang` statt `tax-series`). Der cachende
-        // Aufruf hier überlebt die spätere Neu-Sortierung. Category/Tag lösen
-        // ihr Subjekt über eigene Query-Vars auf, sind also nicht betroffen
-        // (is_tax() ist dort false).
-        if ($query->is_tax()) {
-            $query->get_queried_object();
         }
 
         $taxQuery = $query->get('tax_query');
@@ -122,6 +110,32 @@ final class Query
     private function appliesTo(WP_Query $query): bool
     {
         $translatable = $this->languages->taxonomy()->postTypes();
+
+        // Custom-Taxonomie-Archiv (is_tax, NICHT Category/Tag): den Filter nur
+        // anwenden, wenn rh_lang WIRKLICH an einem Post-Type der abgefragten
+        // Taxonomie hängt. Sonst filtert der Sprachfilter Archive von CPTs ohne
+        // rh_lang-Term leer (z.B. `series` auf `artwork`: rh_lang ist an artwork
+        // nicht registriert, deren Posts können nie einen Sprach-Term tragen, der
+        // strikte rh_lang-Clause wirft auf /de/ alle raus → found=0). Maßgeblich
+        // sind die WIRKLICH registrierten object_types von rh_lang, NICHT
+        // postTypes(): letzteres ist zeitabhängig und listet auch CPTs, die zur
+        // Registrierungszeit von rh_lang (init) noch nicht existierten. Der
+        // get_queried_object()-Aufruf cached zugleich das korrekte Archiv-Subjekt
+        // aus der noch unveränderten tax_query, bevor filterByLanguage den Clause
+        // anhängt (sonst reiht WP beim zweiten parse_tax_query in get_posts() die
+        // query-var-Taxonomie hinter unseren tax_query und get_queried_object()
+        // nähme rh_lang als Subjekt → Template-Hierarchie fällt auf index).
+        if ($query->is_tax()) {
+            $object = $query->get_queried_object();
+            if ($object instanceof \WP_Term) {
+                $archiveTax = get_taxonomy($object->taxonomy);
+                $langTax = get_taxonomy(Taxonomy::TAX_LANG);
+                $archiveTypes = $archiveTax ? (array) $archiveTax->object_type : [];
+                $attached = $langTax ? (array) $langTax->object_type : [];
+
+                return (bool) array_intersect($archiveTypes, $attached);
+            }
+        }
 
         $postType = $query->get('post_type');
 
