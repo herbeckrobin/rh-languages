@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.5
+Stable tag: 0.2.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,10 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.6 =
+* Fix: with shared slugs (0.2.5) the default-language single URL (e.g. `/artwork/what-if/`) redirected to the translation. WordPress does not apply the language tax_query to `is_singular` queries (a single is treated as unique by name), so when two languages share a slug the name query returns both posts and WordPress picks the newer one. Single views now disambiguate a shared slug by the active language via a `the_posts` filter (the default language includes term-less posts). `/artwork/what-if/` resolves to the English post, `/de/artwork/what-if/` to the German one.
+* Fix: `wp rhlang sync-slugs` now only normalizes true `-N` auto-suffixes (where the base equals the default-language sibling's slug). Intentionally localized slugs (e.g. `datenschutz` vs `privacy-policy`, `werke` vs `works`) and structural types (navigation, template parts) are left untouched.
 
 = 0.2.5 =
 * New: translations no longer get a `-2` slug suffix. A translation may now share its slug with the same post in another language (the `/de/` prefix already disambiguates the URL, and the language query filter resolves the right post per language). New translations created via the editor sidebar or post list take the source's slug directly. A `wp_unique_post_slug` filter keeps a suffix only when the slug really collides within the same language. Existing `-2` slugs can be normalized with `wp rhlang sync-slugs [--dry-run] [--post_type=<type>]` (idempotent; run before the site is indexed, otherwise check the 301 redirects WordPress creates).

@@ -14,6 +14,9 @@ final class Cli
     /** Post-Status, die als echte Slug-Belegung zählen. */
     private const STATUSES = ['publish', 'draft', 'pending', 'future', 'private'];
 
+    /** Strukturelle Typen ohne öffentliche URL, deren Slug nicht geteilt wird. */
+    private const STRUCTURAL_TYPES = ['wp_navigation', 'wp_template_part'];
+
     public function __construct(private readonly Languages $languages)
     {
     }
@@ -64,6 +67,13 @@ final class Cli
         $suffixKept = 0;
 
         foreach ($types as $type) {
+            // Strukturelle Typen (Nav, Template-Part) haben keine öffentliche URL
+            // und tragen bewusst einen Sprach-Suffix; der Duplicator teilt ihren
+            // Slug nicht, die Migration fasst sie also auch nicht an.
+            if (in_array($type, self::STRUCTURAL_TYPES, true)) {
+                continue;
+            }
+
             $ids = get_posts([
                 'post_type' => $type,
                 'post_status' => self::STATUSES,
@@ -96,6 +106,15 @@ final class Cli
                 $target = get_post_field('post_name', $translations[$default]);
                 $current = get_post_field('post_name', $postId);
                 if (! is_string($target) || $target === '' || $current === $target) {
+                    continue;
+                }
+
+                // NUR echte Auto-Suffixe angehen: WP hängt `-N` an, wenn der Quell-
+                // Slug im post_type belegt ist. Der aktuelle Slug muss also genau
+                // `{Quell-Slug}-{Zahl}` sein. Absichtlich lokalisierte Slugs
+                // (datenschutz vs privacy-policy, werke vs works) sind KEIN Suffix
+                // von $target und bleiben unangetastet.
+                if (! preg_match('/^' . preg_quote($target, '/') . '-\d+$/', $current)) {
                     continue;
                 }
 

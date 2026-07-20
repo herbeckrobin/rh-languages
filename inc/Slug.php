@@ -29,6 +29,47 @@ final class Slug
     public function boot(): void
     {
         add_filter('wp_unique_post_slug', [$this, 'shareAcrossLanguages'], 10, 6);
+        add_filter('the_posts', [$this, 'disambiguateSingular'], 10, 2);
+    }
+
+    /**
+     * Löst geteilte Slugs bei Einzelansichten auf.
+     *
+     * WordPress wendet die Sprach-tax_query (Query::filterByLanguage) bei
+     * `is_singular` NICHT an: ein Single gilt im Core als per Name/ID eindeutig,
+     * die tax_query landet gar nicht im SQL. Teilen sich EN und DE denselben Slug,
+     * liefert die Namens-Query BEIDE Posts und WP nimmt den neueren, die
+     * Default-Sprach-URL (`/artwork/what-if/`) landet dann auf der Übersetzung
+     * (301 nach `/de/`). Deshalb hier die Ergebnisliste eines Singles auf den Post
+     * der aktiven Sprache eingrenzen. Die Standardsprache schließt term-lose Posts
+     * ein (wie der Query-Filter). Findet sich kein Sprach-Treffer, bleibt die Liste
+     * unverändert (kein unerwartetes 404).
+     *
+     * @param array<int, \WP_Post> $posts
+     * @return array<int, \WP_Post>
+     */
+    public function disambiguateSingular(array $posts, WP_Query $query): array
+    {
+        if (is_admin() || ! $query->is_singular() || count($posts) < 2) {
+            return $posts;
+        }
+        if (! is_object_in_taxonomy($posts[0]->post_type, Taxonomy::TAX_LANG)) {
+            return $posts;
+        }
+
+        $current = $this->languages->current();
+        $default = $this->languages->defaultCode();
+
+        $matched = [];
+        foreach ($posts as $post) {
+            $terms = get_the_terms($post->ID, Taxonomy::TAX_LANG);
+            $lang = (is_array($terms) && $terms !== []) ? (string) $terms[0]->slug : '';
+            if ($lang === $current || ($current === $default && $lang === '')) {
+                $matched[] = $post;
+            }
+        }
+
+        return $matched !== [] ? $matched : $posts;
     }
 
     /**
