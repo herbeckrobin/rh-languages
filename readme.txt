@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.1
+Stable tag: 0.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.2 =
+* Fix: the language switcher pointed at the language home page on every archive (taxonomy, category, date, author) instead of the same archive in the other language. `rh_lang_links()` only resolved a target on singular views and fell back to the home root otherwise. It now uses the same per-language path computation as the hreflang alternates (extracted into a shared method), so both stay in sync. Singular views (translation permalinks) and the front page (language roots) are unchanged.
 
 = 0.2.1 =
 * Fix: custom taxonomy archives (e.g. a `series` archive on a custom post type) fell back to the index template. The language filter appended its `rh_lang` clause before the archive's own taxonomy in the tax_query, so WordPress picked the language term as the queried object (body class `tax-rh_lang` instead of `tax-series`). The queried object is now resolved and cached before the clause is appended, on taxonomy archives only. Category and tag archives were never affected (they resolve their subject via dedicated query vars).

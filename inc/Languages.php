@@ -95,6 +95,54 @@ final class Languages
         return $this->current() === $this->config->defaultCode();
     }
 
+    /**
+     * Der aktuelle Request-Pfad je konfigurierter Sprache neu geprefixt, als
+     * [ code => url ]. Für Archive und andere Nicht-Singular-Kontexte (Taxonomie,
+     * Kategorie, Datum, Autor): das Gegenstück liegt unter demselben Pfad, nur mit
+     * bzw. ohne Sprach-Prefix. Geteilte Rechnung für die hreflang-Alternates (Head)
+     * UND den Sprach-Switcher (rh_lang_links), damit beide nicht auseinanderlaufen.
+     *
+     * @return array<string, string>
+     */
+    public function currentPathUrls(): array
+    {
+        $base = $this->currentBasePath();
+        $root = $this->homeRoot();
+
+        $urls = [];
+        foreach ($this->config->all() as $language) {
+            $urls[$language->code] = $language->isDefault
+                ? $root . '/' . $base
+                : $root . '/' . $language->code . '/' . $base;
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Aktueller Request-Pfad ohne Home-Basis und ohne führenden Sprachcode
+     * (mit Trailing-Slash, leer für die Wurzel).
+     */
+    private function currentBasePath(): string
+    {
+        $path = (string) wp_parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+        $homePath = trim((string) wp_parse_url($this->homeRoot(), PHP_URL_PATH), '/');
+        $path = trim($path, '/');
+
+        if ($homePath !== '' && str_starts_with($path, $homePath)) {
+            $path = trim(substr($path, strlen($homePath)), '/');
+        }
+
+        $segments = $path === '' ? [] : explode('/', $path);
+        if (($segments[0] ?? '') !== '' && $this->config->has($segments[0])) {
+            array_shift($segments);
+        }
+
+        $base = implode('/', $segments);
+
+        return $base === '' ? '' : $base . '/';
+    }
+
     // --- Lookups ---
 
     public function langOfPost(int $postId): string

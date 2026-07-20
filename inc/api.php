@@ -154,6 +154,14 @@ if (! function_exists('rh_lang_links')) {
         // Startseite (Duplicate Content).
         $isFront = $postId === null && is_front_page();
 
+        // Archiv/Nicht-Singular (Taxonomie-, Kategorie-, Datums-, Autor-Archiv):
+        // kein eigenes Objekt, aber das Gegenstück liegt unter demselben Pfad je
+        // Sprach-Prefix. Dieselbe Rechnung wie die hreflang-Alternates (Head),
+        // sonst zeigt der Switcher auf jedem Archiv auf die Startseite.
+        $archiveUrls = ($postId === null && ! $isFront && $queried === 0)
+            ? $api->currentPathUrls()
+            : [];
+
         $out = [];
         foreach ($api->config()->all() as $language) {
             $code = $language->code;
@@ -162,6 +170,8 @@ if (! function_exists('rh_lang_links')) {
                 $url = rh_lang_home_url($code);
             } elseif ($queried > 0 && isset($translations[$code])) {
                 $url = get_permalink($translations[$code]);
+            } elseif (isset($archiveUrls[$code])) {
+                $url = $archiveUrls[$code];
             } else {
                 $url = rh_lang_home_url($code);
             }

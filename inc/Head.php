@@ -101,39 +101,8 @@ final class Head
         }
 
         // Archive/Sonstiges: gleicher (nicht sprach-eigener) Pfad je Sprach-Prefix.
-        $base = $this->currentBasePath();
-        $root = $this->languages->homeRoot();
-        $urls = [];
-        foreach ($this->languages->config()->all() as $language) {
-            $urls[$language->code] = $language->isDefault
-                ? $root . '/' . $base
-                : $root . '/' . $language->code . '/' . $base;
-        }
-
-        return $urls;
-    }
-
-    /**
-     * Aktueller Request-Pfad ohne Home-Basis und ohne führenden Sprachcode.
-     */
-    private function currentBasePath(): string
-    {
-        $path = (string) wp_parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
-        $homePath = trim((string) wp_parse_url($this->languages->homeRoot(), PHP_URL_PATH), '/');
-        $path = trim($path, '/');
-
-        if ($homePath !== '' && str_starts_with($path, $homePath)) {
-            $path = trim(substr($path, strlen($homePath)), '/');
-        }
-
-        $segments = $path === '' ? [] : explode('/', $path);
-        if (($segments[0] ?? '') !== '' && $this->languages->config()->has($segments[0])) {
-            array_shift($segments);
-        }
-
-        $base = implode('/', $segments);
-
-        return $base === '' ? '' : $base . '/';
+        // Geteilte Rechnung mit dem Switcher (rh_lang_links).
+        return $this->languages->currentPathUrls();
     }
 
     /**
