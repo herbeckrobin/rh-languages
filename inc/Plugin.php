@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RhLanguages;
 
 use RhBlueprint\Core\Core;
+use RhBlueprint\Core\UpdateChecker;
 use RhBlueprint\Core\Settings\SettingsPage;
 use RhLanguages\Admin\CreateController;
 use RhLanguages\Admin\LanguagesPage;
@@ -30,9 +31,9 @@ final class Plugin
 
     public static function boot(): void
     {
-        if (class_exists(UpdateChecker::class)) {
-            (new UpdateChecker())->boot();
-        }
+        add_action('plugins_loaded', static function (): void {
+            (new UpdateChecker('rh-languages', RHLANG_PLUGIN_FILE))->boot();
+        }, 0);
 
         // Languages-Singleton so früh wie möglich bereitstellen, damit die
         // globalen rh_lang_* Helper auch vor dem Core-Boot sinnvoll antworten.

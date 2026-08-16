@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace RhLanguages\Admin;
 
+use RhBlueprint\Core\Admin\Ui;
+use RhBlueprint\Core\Admin\Assets;
 use RhLanguages\Config;
 use RhLanguages\Features;
 use RhLanguages\Plugin;
@@ -41,8 +43,7 @@ final class LanguagesPage
 
     public function enqueueAssets(string $hook): void
     {
-        $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
-        if ($page !== SettingsPage::MENU_SLUG) {
+        if (! Assets::onSettings()) {
             return;
         }
         $abs = RHLANG_PLUGIN_DIR . 'assets/css/admin.css';
@@ -177,11 +178,10 @@ final class LanguagesPage
             $on = Features::enabled($key);
             echo '<div class="rhbp-card rhlang-feature">';
             echo '<div class="rhlang-feature__text"><strong>' . esc_html($feature['label']) . '</strong><span>' . esc_html($feature['description']) . '</span></div>';
-            printf(
-                '<label class="rhbp-switch"><input type="checkbox" name="feature[%1$s]" value="1" %2$s><span class="rhbp-switch__track" aria-hidden="true"></span></label>',
-                esc_attr($key),
-                checked($on, true, false)
-            );
+            echo Ui::switch([
+                'name' => 'feature[' . $key . ']',
+                'checked' => $on,
+            ]);
             echo '</div>';
         }
         echo '</div>';
