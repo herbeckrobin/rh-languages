@@ -43,7 +43,7 @@ final class LanguagesPage
 
     public function enqueueAssets(string $hook): void
     {
-        if (! Assets::onSettings()) {
+        if (! Assets::onSettings(self::TAB)) {
             return;
         }
         $abs = RHLANG_PLUGIN_DIR . 'assets/css/admin.css';
