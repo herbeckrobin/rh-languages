@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.7
+Stable tag: 0.2.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.8 =
+* Internal: shared building blocks from core 2.6.0. The update check no longer loads on regular front-end requests.
 
 = 0.2.7 =
 * New: a translation inherits the source post's publish date (`post_date`/`post_date_gmt`). Previously every translation created in one batch shared the same timestamp, so any date-ordered list (e.g. a featured-works query) came out in a different order per language. New translations now keep the original's date (`edit_date` makes it survive the later publish). Existing translations can be aligned with `wp rhlang sync-dates [--dry-run] [--post_type=<type>]`, which sets each translation's date to its default-language sibling's date.
