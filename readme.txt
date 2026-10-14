@@ -4,7 +4,7 @@ Tags: multilingual, translation, i18n, hreflang, language switcher
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.11
+Stable tag: 0.2.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ String scanner, machine translation, translation memory, custom database tables,
 Part of the rh-blueprint collection. Requires pretty permalinks and a block theme.
 
 == Changelog ==
+
+= 0.2.12 =
+* Sitemap: a translated static front page is listed under its language root (/de/) instead of its page slug (/de/home/), which only redirected.
 
 = 0.2.11 =
 * White label: when the core (2.9 or later) has a brand set, the module name in notices uses the brand instead of "RH".

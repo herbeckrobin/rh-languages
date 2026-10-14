@@ -26,6 +26,7 @@ final class Frontend
         if (Features::enabled(Features::FRONT_PAGE_PER_LANGUAGE)) {
             add_filter('pre_option_page_on_front', [$this, 'frontPageForLanguage']);
             add_filter('pre_option_page_for_posts', [$this, 'postsPageForLanguage']);
+            add_filter('wp_sitemaps_posts_entry', [$this, 'sitemapFrontPageEntry'], 10, 2);
         }
 
         if (Features::enabled(Features::NAV_PER_LANGUAGE)) {
@@ -73,6 +74,38 @@ final class Frontend
     public function postsPageForLanguage(mixed $pre): mixed
     {
         return $this->translatedOption('page_for_posts', $pre);
+    }
+
+    /**
+     * Die Core-Sitemap läuft in der Default-Sprache, page_on_front ist dort die
+     * Default-Startseite. Deren Übersetzungen bekämen von get_permalink ihren
+     * Seiten-Slug (/de/home/), der per 301 umleitet. In der Sitemap gehört jede
+     * Startseiten-Übersetzung auf ihre Sprach-Wurzel (/de/), dieselbe URL wie
+     * Switcher und hreflang.
+     *
+     * @param array<string, mixed> $entry
+     * @return array<string, mixed>
+     */
+    public function sitemapFrontPageEntry(array $entry, \WP_Post $post): array
+    {
+        if ($post->post_type !== 'page' || get_option('show_on_front') !== 'page') {
+            return $entry;
+        }
+
+        $this->resolvingOption = true;
+        $frontId = (int) get_option('page_on_front');
+        $this->resolvingOption = false;
+
+        if ($frontId <= 0 || $post->ID === $frontId) {
+            return $entry;
+        }
+
+        $code = array_search($post->ID, $this->languages->translations($frontId), true);
+        if (is_string($code)) {
+            $entry['loc'] = rh_lang_home_url($code);
+        }
+
+        return $entry;
     }
 
     /**
